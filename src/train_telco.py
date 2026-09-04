@@ -80,7 +80,7 @@ preprocessor = ColumnTransformer(
 # --- PIPELINE ---
 pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+    ('classifier', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced'))
 ])
 
 # --- TRAIN ---
