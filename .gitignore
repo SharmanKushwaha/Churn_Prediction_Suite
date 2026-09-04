@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Data files (raw data - keep it local)
+*.csv
+*.xlsx
+*.db
+
+# Model files (optional – can include if small)
+# *.joblib
+# *.pkl
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Streamlit
+.streamlit/
