@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score, classification_report
 import joblib
 # print("=" * 60)
@@ -72,7 +73,7 @@ preprocessor = ColumnTransformer(
     ]
 )
 
-# --- PIPELINE ---
+# --- RANDOMFORESTCLASSIFIER PIPELINE ---
 pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
     ('classifier', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced'))
@@ -88,6 +89,32 @@ print(f"\n   Random Forest Accuracy: {accuracy * 100:.2f}%")
 print("\n   Classification Report:")
 print(classification_report(y_test, y_pred))
 
+print("\n" + "=" * 60)
+print("XGBOOST RESULTS")
+print("=" * 60)
+
+xgb_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', XGBClassifier(
+        n_estimators=100,
+        learning_rate=0.1,
+        max_depth=5,
+        random_state=42,
+        scale_pos_weight=2
+    ))
+])
+
+xgb_pipeline.fit(X_train, y_train)
+y_pred_xgb = xgb_pipeline.predict(X_test)
+acc_xgb = accuracy_score(y_test, y_pred_xgb)
+
+print(f"   Accuracy: {acc_xgb * 100:.2f}%")
+print("\n   Classification Report:")
+print(classification_report(y_test, y_pred_xgb))
 # --- SAVE MODEL ---
-# joblib.dump(pipeline, 'models/bank_model.joblib')
-# print("\n Bank model saved as 'models/bank_model.joblib'")
+if acc_xgb > accuracy:
+    joblib.dump(xgb_pipeline, 'models/bank_model.joblib')
+    print("\n XGBoost model saved (better than Random Forest)")
+else:
+    joblib.dump(pipeline, 'models/bank_model.joblib')
+    print("\n Random Forest model saved (better than XGBoost)")

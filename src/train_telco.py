@@ -5,11 +5,12 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score, classification_report
 import joblib
 # print("=" * 60)
 # print(" CHURN PREDICTION SUITE - DATA EXPLORATION ")
-# print("=" * 60)
+# print("=" * 60) 
 # Load Telco dataset
 telco_path = "data/telco_customer_churn.csv"
 telco_df = pd.read_csv(telco_path)
@@ -37,6 +38,8 @@ print("=" * 60)
 # 1. Drop customerID from features
 X = telco_df.drop(['customerID', 'Churn'], axis=1)
 y = telco_df['Churn']
+# Convert target to numeric
+y = y.map({'No': 0, 'Yes': 1})
 
 print(f"   Features shape: {X.shape}")
 print(f"   Target shape: {y.shape}")
@@ -77,7 +80,7 @@ preprocessor = ColumnTransformer(
         ('cat', OneHotEncoder(drop='first', handle_unknown='ignore'), categorical_cols)
     ]
 )
-# --- PIPELINE ---
+# --- RANDOMFORESTCLASSIFIER PIPELINE ---
 pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
     ('classifier', RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced'))
@@ -91,6 +94,36 @@ accuracy = accuracy_score(y_test, y_pred)
 print(f"\n   Random Forest Accuracy: {accuracy * 100:.2f}%")
 print("\n   Classification Report:")
 print(classification_report(y_test, y_pred))
+
+# --- XGBOOST PIPELINE ---
+xgb_pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', XGBClassifier(
+        n_estimators=100,
+        learning_rate=0.1,
+        max_depth=5,
+        random_state=42,
+        scale_pos_weight=2  # Helps with class imbalance
+    ))
+])
+
+# Train
+xgb_pipeline.fit(X_train, y_train)
+
+# Evaluate
+y_pred_xgb = xgb_pipeline.predict(X_test)
+accuracy_xgb = accuracy_score(y_test, y_pred_xgb)
+print("\n" + "=" * 60)
+print("XGBOOST RESULTS")
+print("=" * 60)
+print(f"   Accuracy: {accuracy_xgb * 100:.2f}%")
+print("\n   Classification Report:")
+print(classification_report(y_test, y_pred_xgb))
 # --- SAVE MODEL ---
-# joblib.dump(pipeline, 'models/telco_model.joblib')
-# print("\n Telco model saved as 'models/telco_model.joblib'")
+# Compare and save the better model
+if accuracy_xgb > accuracy:
+    joblib.dump(xgb_pipeline, 'models/telco_model.joblib')
+    print("\n XGBoost model saved (better than Random Forest)")
+else:
+    joblib.dump(pipeline, 'models/telco_model.joblib')
+    print("\n Random Forest model saved (better than XGBoost)")
