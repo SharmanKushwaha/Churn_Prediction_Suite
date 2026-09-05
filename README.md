@@ -78,3 +78,8 @@ python -m venv venv
 source venv/bin/activate   # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+## 🔮 Live Demo
+
+Try the app live here:  
+👉 [Churn Prediction Suite](https://churnpredictionsuite-zujwxgsguhebym2hndxn3n.streamlit.app/)
